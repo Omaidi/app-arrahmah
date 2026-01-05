@@ -13,111 +13,8 @@
 
     <!-- App Styles -->
     <link rel="stylesheet" href="css/style.css">
-    <style>
-        /* Login Modal & Admin Styles */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 10000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.5);
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-content {
-            background-color: #fefefe;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 90%;
-            max-width: 350px;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-            text-align: center;
-        }
-
-        .modal-content input,
-        .modal-content textarea {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            box-sizing: border-box;
-        }
-
-        .modal-content button {
-            background-color: #1c3d5a;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            width: 100%;
-            font-size: 16px;
-        }
-
-        .close-modal {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            line-height: 20px;
-        }
-
-        .admin-controls {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            padding: 10px;
-            background: #f0f0f0;
-            border-bottom: 1px solid #ddd;
-            margin-bottom: 15px;
-            border-radius: 0 0 10px 10px;
-        }
-
-        .btn-admin {
-            padding: 5px 10px;
-            font-size: 12px;
-            border-radius: 4px;
-            background: #1c3d5a;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-
-        .btn-delete {
-            background: #d9534f;
-        }
-
-        .btn-edit {
-            background: #f0ad4e;
-        }
-
-        /* Active state for elements to remove blue highlighting */
-        * {
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        .song-title:active {
-            background-color: #e2e8f0;
-        }
-
-        /* Offline indicator */
-        #offlineStatus {
-            background: #d9534f;
-            color: white;
-            text-align: center;
-            font-size: 12px;
-            padding: 5px;
-            display: none;
-        }
-    </style>
+    <!-- App Styles -->
+    <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
@@ -149,17 +46,15 @@
     <!-- Header -->
     <!-- Header -->
     <header>
-        <div class="header-content"
-            style="display: flex; justify-content: center; align-items: center; position: relative; margin-bottom: 10px;">
+        <div class="header-content">
             <h1 id="headerTitle">Majelis Sholawat Ar-Rahmah</h1>
             <i class="fas fa-sync" id="syncBtn"
                 style="position: absolute; right: 0; font-size: 18px; cursor: pointer; display: none;"
                 title="Reload Data"></i>
         </div>
-        <div style="position: relative;">
-            <i class="fas fa-search"
-                style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #fff; opacity: 0.7;"></i>
-            <input type="text" id="searchBox" placeholder="Cari Judul Sholawat..." style="padding-left: 40px;">
+        <div class="search-wrapper">
+            <input type="text" id="searchBox" placeholder="Cari Judul Sholawat...">
+            <i class="fas fa-search search-icon"></i>
         </div>
     </header>
 
