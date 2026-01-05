@@ -23,7 +23,9 @@ let songs = [];
 let appConfig = {
     waRequest: "https://wa.me/6283853027516?text=Assalamualaikum%20wr%20wb.%0ASaya%20mau%20request%20sholawat%20kak%3F",
     waShare: "https://wa.me/?text=Link%0AAplikasi+Lirik+Sholawat",
-    igLink: "https://instagram.com/omaidi.mp"
+    igLink: "https://instagram.com/omaidi.mp",
+    appTitle: "Majelis Sholawat Ar-Rahmah",
+    logoUrl: "https://cdn-icons-png.flaticon.com/512/2665/2665038.png"
 };
 let currentUser = null;
 
@@ -64,6 +66,13 @@ async function initApp() {
     window.addEventListener('online', () => { isOnline = true; updateStatus(); });
     window.addEventListener('offline', () => { isOnline = false; updateStatus(); });
     updateStatus();
+
+    // Hide Splash Screen
+    setTimeout(() => {
+        const splash = document.getElementById('splashScreen');
+        splash.style.opacity = '0';
+        setTimeout(() => splash.style.display = 'none', 500);
+    }, 2500);
 }
 
 function updateStatus() {
@@ -90,6 +99,18 @@ function loadLocalData() {
     const savedConfig = localStorage.getItem(LS_CONFIG);
     if (savedConfig) {
         appConfig = JSON.parse(savedConfig);
+    }
+    applyConfig(); // Apply branding immediately
+}
+
+function applyConfig() {
+    if (appConfig.appTitle) {
+        document.getElementById('headerTitle').innerText = "📖 " + appConfig.appTitle;
+        document.getElementById('splashTitle').innerText = appConfig.appTitle;
+        document.title = appConfig.appTitle;
+    }
+    if (appConfig.logoUrl) {
+        document.getElementById('splashLogo').src = appConfig.logoUrl;
     }
 }
 
@@ -126,6 +147,7 @@ function setupRealtimeListeners() {
         if (data) {
             appConfig = data;
             saveLocalData();
+            applyConfig();
             renderFab();
         }
     });
@@ -230,6 +252,10 @@ function renderFab() {
             document.getElementById('confWaRequest').value = appConfig.waRequest;
             document.getElementById('confWaShare').value = appConfig.waShare;
             document.getElementById('confIg').value = appConfig.igLink;
+            // New Branding Configs
+            document.getElementById('confAppTitle').value = appConfig.appTitle || "Majelis Sholawat Ar-Rahmah";
+            document.getElementById('confAppLogo').value = appConfig.logoUrl || "";
+
             document.getElementById('configModal').style.display = 'flex';
         });
         document.getElementById('btnAdd').addEventListener('click', () => openEditor(null));
@@ -345,12 +371,16 @@ document.getElementById('btnSaveConfig').addEventListener('click', () => {
     appConfig.waRequest = document.getElementById('confWaRequest').value;
     appConfig.waShare = document.getElementById('confWaShare').value;
     appConfig.igLink = document.getElementById('confIg').value;
+    // Save Branding
+    appConfig.appTitle = document.getElementById('confAppTitle').value;
+    appConfig.logoUrl = document.getElementById('confAppLogo').value;
 
     if (db) {
         set(ref(db, 'config'), appConfig);
     } else {
         saveLocalData();
     }
+    applyConfig(); // Apply instantly
     document.getElementById('configModal').style.display = 'none';
     renderFab();
 });
