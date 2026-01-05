@@ -9,17 +9,35 @@
     --card-radius: 12px;
 }
 
-body,
 html {
+    height: 100%;
+    overflow: hidden;
+    /* Prevents viewport scrolling and rubber-banding */
+}
+
+body {
     margin: 0;
     padding: 0;
     font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
     background: var(--bg-light);
     color: var(--text-dark);
-    min-height: 100vh;
+    height: 100%;
+    overflow-y: auto;
+    /* Active scroll container */
+    overscroll-behavior-y: none;
+    /* Prevents chain to viewport */
     display: flex;
     flex-direction: column;
     -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* Allow text selection in inputs and textareas */
+input,
+textarea {
+    user-select: text;
+    -webkit-user-select: text;
 }
 
 /* Header - Modern & Sticky */
