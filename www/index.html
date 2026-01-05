@@ -147,13 +147,20 @@
     <div id="offlineStatus">Anda sedang offline. Mode baca saja.</div>
 
     <!-- Header -->
+    <!-- Header -->
     <header>
-        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-            <h1 id="headerTitle">📖 Majelis Sholawat Ar-Rahmah</h1>
-            <i class="fas fa-sync" id="syncBtn" style="font-size: 18px; cursor: pointer; display: none;"
+        <div class="header-content"
+            style="display: flex; justify-content: center; align-items: center; position: relative; margin-bottom: 10px;">
+            <h1 id="headerTitle">Majelis Sholawat Ar-Rahmah</h1>
+            <i class="fas fa-sync" id="syncBtn"
+                style="position: absolute; right: 0; font-size: 18px; cursor: pointer; display: none;"
                 title="Reload Data"></i>
         </div>
-        <input type="text" id="searchBox" placeholder="Cari sholawat...">
+        <div style="position: relative;">
+            <i class="fas fa-search"
+                style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #fff; opacity: 0.7;"></i>
+            <input type="text" id="searchBox" placeholder="Cari Judul Sholawat..." style="padding-left: 40px;">
+        </div>
     </header>
 
     <!-- Main Content -->
@@ -217,6 +224,16 @@
 
             <label style="font-size:12px;">Link Instagram</label>
             <input type="text" id="confIg">
+
+            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+            <label style="display:block; text-align:left;"><b>Keamanan Admin:</b></label>
+            <div style="background: #f9f9f9; padding: 10px; border-radius: 5px; margin-top: 5px;">
+                <input type="password" id="newAdminPass" placeholder="Password Admin Baru">
+                <input type="password" id="confirmAdminPass" placeholder="Konfirmasi Password Baru">
+                <input type="password" id="securityCode" placeholder="Kode Keamanan (Wajib)"
+                    style="border-color: #f0ad4e;">
+                <button id="btnUpdatePass" style="background: #f0ad4e; margin-top: 5px;">Ganti Password Admin</button>
+            </div>
 
             <button id="btnSaveConfig" style="margin-top:10px;">Simpan Konfigurasi</button>
             <button id="btnLogout" style="margin-top:10px; background:#d9534f;">Logout</button>

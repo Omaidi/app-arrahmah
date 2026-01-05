@@ -1,200 +1,229 @@
-/* Global Styles */
+:root {
+    --primary-color: #1e3c72;
+    --primary-dark: #2a5298;
+    --accent-color: #f0ad4e;
+    --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    --card-bg: rgba(255, 255, 255, 0.95);
+    --text-color: #2c3e50;
+    --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 10px 20px rgba(0, 0, 0, 0.1);
+    --radius: 16px;
+}
+
 body,
 html {
     margin: 0;
     padding: 0;
     font-family: 'Poppins', sans-serif;
-    background: #fdfdfd;
-    color: #333;
+    background: var(--bg-gradient);
+    color: var(--text-color);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    /* Disable blue highlight */
     -webkit-tap-highlight-color: transparent;
 }
 
 /* Header */
 header {
-    background: #1c3d5a;
+    background: rgba(30, 60, 114, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     color: #fff;
-    padding: 20px;
+    padding: 15px 20px;
     text-align: center;
     position: sticky;
     top: 0;
-    z-index: 100;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
 }
 
 header h1 {
-    font-size: 24px;
-    margin-bottom: 15px;
-    margin-top: 0;
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 15px 0;
+    letter-spacing: 0.5px;
 }
 
 #searchBox {
-    padding: 12px;
-    width: 90%;
-    max-width: 400px;
+    padding: 12px 20px;
+    width: 100%;
+    max-width: 500px;
     border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border-radius: 30px;
+    font-size: 15px;
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+#searchBox::placeholder {
+    color: rgba(255, 255, 255, 0.8);
 }
 
 #searchBox:focus {
     outline: none;
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 1);
+    color: #333;
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.3);
 }
 
 /* Container */
 .container {
-    max-width: 900px;
-    margin: auto;
+    max-width: 800px;
+    margin: 0 auto;
     padding: 20px;
     flex: 1;
     width: 100%;
     box-sizing: border-box;
-    padding-bottom: 100px;
-    /* Space for FAB and footer */
+    padding-bottom: 120px;
 }
 
-/* Song Item */
+/* Cards */
 .song {
-    background: #fff;
-    border: 1px solid #ddd;
-    border-radius: 10px;
+    background: var(--card-bg);
+    border-radius: var(--radius);
     margin-bottom: 15px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: 1px solid rgba(255, 255, 255, 0.5);
     overflow: hidden;
-    transition: all 0.3s;
 }
 
-.song:hover {
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+.song:active {
+    transform: scale(0.98);
 }
 
-/* Song Title */
 .song-title {
-    padding: 15px 25px;
-    font-size: 18px;
+    padding: 18px 20px;
+    font-size: 16px;
     font-weight: 600;
     cursor: pointer;
-    background: #f7f9fc;
-    border-radius: 10px 10px 0 0;
-    display: block;
-    transition: background 0.2s, color 0.2s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #2c3e50;
+    position: relative;
     user-select: none;
-    /* Prevent text selection */
 }
 
-/* Custom Active/Hover State matching theme instead of blue highlight */
-@media (hover: hover) {
-    .song-title:hover {
-        background: #1c3d5a;
-        color: #fff;
-    }
+.song-title::after {
+    content: '\f078';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    font-size: 12px;
+    color: #aaa;
+    transition: transform 0.3s;
 }
 
-.song-title:active {
-    background: #16304a;
-    /* Darker shade of theme color */
-    color: #fff;
-}
+/* Rotate icon when active (implementation requires JS class toggle, or we just rely on CSS active state visuals) */
 
-.song-title:focus {
-    outline: none;
-}
-
-
-/* Lyrics */
 .song-lyrics {
     max-height: 0;
     overflow: hidden;
-    padding: 0 15px;
-    line-height: 1.7;
-    white-space: pre-line;
-    background: #fff;
-    border-top: 1px solid #eee;
+    padding: 0 20px;
     font-size: 16px;
-    transition: max-height 0.4s ease-out, padding 0.4s ease;
+    line-height: 1.8;
+    background: #fdfdfd;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0;
 }
 
 .song-lyrics.show {
-    max-height: 3000px;
-    /* Large enough for long lyrics */
-    padding: 15px;
+    max-height: 2000px;
+    padding: 20px;
+    opacity: 1;
+    border-top: 1px solid #eee;
 }
 
-/* Arabic Text */
 .arab {
     font-family: 'Amiri', serif;
-    direction: rtl;
-    text-align: right;
-    font-size: 22px;
-    line-height: 2.2;
-    margin-bottom: 15px;
-    color: #000;
-}
-
-/* Footer */
-footer {
+    font-size: 24px;
+    line-height: 2.4;
     text-align: center;
-    padding: 20px 10px;
-    background: #1c3d5a;
-    font-size: 14px;
-    color: #fff;
-    margin-top: auto;
-    padding-bottom: 30px;
+    color: #1e3c72;
+    margin-bottom: 10px;
+    background: rgba(30, 60, 114, 0.03);
+    padding: 10px;
+    border-radius: 10px;
 }
 
-footer a {
-    color: #fff;
-    text-decoration: none;
+/* Buttons */
+.admin-controls {
+    display: flex;
+    gap: 10px;
+    padding: 0 20px 10px 20px;
+    justify-content: flex-end;
+}
+
+.btn-admin {
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    border: none;
     font-weight: 600;
+    transition: transform 0.1s;
 }
 
-/* FAB Styles */
+.btn-edit {
+    background: var(--accent-color);
+    color: white;
+}
+
+.btn-delete {
+    background: #e74c3c;
+    color: white;
+}
+
+.btn-admin:active {
+    transform: scale(0.95);
+}
+
+/* FAB */
 .fab-container {
     position: fixed;
     bottom: 30px;
-    right: 25px;
-    z-index: 9999;
+    right: 30px;
+    z-index: 999;
 }
 
 .fab-button {
     width: 60px;
     height: 60px;
-    background: #1c3d5a;
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
     border-radius: 50%;
     color: white;
     font-size: 24px;
     display: flex;
     justify-content: center;
     align-items: center;
+    box-shadow: 0 10px 20px rgba(30, 60, 114, 0.3);
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    user-select: none;
-    transition: background 0.3s ease, transform 0.3s ease;
-    -webkit-tap-highlight-color: transparent;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .fab-button:active {
-    transform: scale(0.95);
-    background: #16304a;
+    transform: scale(0.9);
 }
 
 .fab-button.active {
     transform: rotate(45deg);
+    background: #e74c3c;
 }
 
 .fab-options {
     position: absolute;
-    bottom: 75px;
-    right: 0;
+    bottom: 70px;
+    right: 5px;
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: center;
     pointer-events: none;
+    gap: 10px;
 }
 
 .fab-options.show {
@@ -202,98 +231,152 @@ footer a {
 }
 
 .fab-option {
-    width: 50px;
-    height: 50px;
-    margin-bottom: 15px;
+    width: 45px;
+    height: 45px;
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
     color: white;
-    text-decoration: none;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
     cursor: pointer;
     opacity: 0;
-    transform: translateY(20px) scale(0.8);
-    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    font-size: 22px;
-    -webkit-tap-highlight-color: transparent;
+    transform: translateY(20px) scale(0.5);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    text-decoration: none;
+    font-size: 20px;
 }
 
-.fab-option:active {
-    transform: scale(0.9);
-}
-
-.fab-option img {
-    width: 24px;
-    height: 24px;
-    filter: brightness(0) invert(1);
-}
-
-/* Staggered Animation */
 .fab-options.show .fab-option {
     opacity: 1;
     transform: translateY(0) scale(1);
 }
 
 .fab-options.show .fab-option:nth-child(1) {
-    transition-delay: 0.2s;
+    transition-delay: 0.05s;
 }
 
-/* Bottom-most option */
 .fab-options.show .fab-option:nth-child(2) {
     transition-delay: 0.1s;
 }
 
 .fab-options.show .fab-option:nth-child(3) {
-    transition-delay: 0s;
+    transition-delay: 0.15s;
 }
 
-/* Top-most option */
-
-/* Config Button in FAB */
-.fab-config {
-    background: #f0ad4e;
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.3s;
 }
 
-/* Responsive */
-@media(max-width: 600px) {
-    header h1 {
-        font-size: 20px;
+@keyframes fadeIn {
+    from {
+        opacity: 0;
     }
 
-    #searchBox {
-        width: 95%;
+    to {
+        opacity: 1;
+    }
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    width: 85%;
+    max-width: 400px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    max-height: 85vh;
+    overflow-y: auto;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
     }
 
-    .song-title {
-        font-size: 16px;
-        padding: 15px 20px;
+    to {
+        transform: translateY(0);
+        opacity: 1;
     }
+}
 
-    .song-lyrics {
-        font-size: 15px;
-    }
+.modal-content h2 {
+    margin-top: 0;
+    color: #1e3c72;
+    font-size: 22px;
+}
 
-    .arab {
-        font-size: 20px;
-    }
+.modal-content input,
+.modal-content textarea {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 2px solid #eee;
+    border-radius: 10px;
+    box-sizing: border-box;
+    font-family: inherit;
+    transition: border 0.3s;
+}
 
-    footer {
-        font-size: 13px;
-    }
+.modal-content input:focus,
+.modal-content textarea:focus {
+    border-color: #1e3c72;
+    outline: none;
+}
 
-    .fab-button {
-        width: 56px;
-        height: 56px;
-        bottom: 20px;
-        right: 20px;
-    }
+.modal-content button {
+    background: #1e3c72;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    width: 100%;
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 10px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
 
-    .fab-options {
-        bottom: 70px;
-        right: -5px;
-    }
+.modal-content button:active {
+    transform: scale(0.98);
+}
 
-    /* Adjust alignment */
+.close-modal {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 24px;
+    color: #aaa;
+    cursor: pointer;
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 30px;
+    font-size: 14px;
+    color: #666;
+    background: transparent;
+}
+
+footer a {
+    color: #1e3c72;
+    text-decoration: none;
+    font-weight: 600;
 }
