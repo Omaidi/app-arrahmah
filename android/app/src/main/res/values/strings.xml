@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Majelis Sholawat Ar-Rahmah</string>
+    <string name="title_activity_main">Majelis Sholawat Ar-Rahmah</string>
+    <string name="package_name">com.omaidi.sholawat</string>
+    <string name="custom_url_scheme">com.omaidi.sholawat</string>
+</resources>
