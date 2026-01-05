@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Majelis Sholawat Ar-Rahmah</title>
 
     <!-- External Resources -->
@@ -13,13 +13,123 @@
 
     <!-- App Styles -->
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* Login Modal & Admin Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 350px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .modal-content input,
+        .modal-content textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        .modal-content button {
+            background-color: #1c3d5a;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+
+        .close-modal {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 20px;
+        }
+
+        .admin-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            padding: 10px;
+            background: #f0f0f0;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 15px;
+            border-radius: 0 0 10px 10px;
+        }
+
+        .btn-admin {
+            padding: 5px 10px;
+            font-size: 12px;
+            border-radius: 4px;
+            background: #1c3d5a;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-delete {
+            background: #d9534f;
+        }
+
+        .btn-edit {
+            background: #f0ad4e;
+        }
+
+        /* Active state for elements to remove blue highlighting */
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .song-title:active {
+            background-color: #e2e8f0;
+        }
+
+        /* Offline indicator */
+        #offlineStatus {
+            background: #d9534f;
+            color: white;
+            text-align: center;
+            font-size: 12px;
+            padding: 5px;
+            display: none;
+        }
+    </style>
 </head>
 
 <body>
+    <div id="offlineStatus">Anda sedang offline. Mode baca saja.</div>
 
     <!-- Header -->
     <header>
-        <h1>📖 Majelis Sholawat Ar-Rahmah</h1>
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <h1>📖 Majelis Sholawat Ar-Rahmah</h1>
+            <i class="fas fa-sync" id="syncBtn" style="font-size: 18px; cursor: pointer; display: none;"
+                title="Reload Data"></i>
+        </div>
         <input type="text" id="searchBox" placeholder="Cari sholawat...">
     </header>
 
@@ -28,25 +138,8 @@
 
     <!-- Floating Action Button -->
     <div class="fab-container" aria-label="Floating action button menu">
-        <div class="fab-options" aria-hidden="true">
-            <!-- WhatsApp -->
-            <a class="fab-option" style="background:#25D366;"
-                href="https://wa.me/?text=Link%0AAplikasi+Lirik+Sholawat+%3A+💚%0Ahttps://drive.google.com/file/d/1a3C_1E81Rj5ysf4p081bbJJSEcYwGKgo/view?usp=drivesdk"
-                target="_blank" title="Bagikan ke WhatsApp" aria-label="Bagikan ke WhatsApp">
-                <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/whatsapp.svg" alt="WhatsApp Icon">
-            </a>
-            <!-- Instagram -->
-            <a class="fab-option" style="background:#E4405F;" href="https://instagram.com/omaidi.mp" target="_blank"
-                title="Instagram" aria-label="Instagram">
-                <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg"
-                    alt="Instagram Icon">
-            </a>
-            <!-- Chat Admin -->
-            <a class="fab-option" style="background:#1c3d5a;"
-                href="https://wa.me/6283853027516?text=Assalamualaikum%20wr%20wb.%0ASaya%20mau%20request%20sholawat%20kak%3F%20Apakah%20bisa%3F"
-                title="Chat Admin" aria-label="Chat Admin">
-                💌
-            </a>
+        <div class="fab-options" aria-hidden="true" id="fabOptions">
+            <!-- Dynamic Links will be injected here -->
         </div>
         <div class="fab-button" role="button" aria-expanded="false">
             <i class="fas fa-plus"></i>
@@ -55,11 +148,54 @@
 
     <!-- Footer -->
     <footer>
+        <div id="adminPanelLink" style="margin-top: 10px; cursor: pointer; font-size: 12px; opacity: 0.6;">Admin Login
+        </div>
         &copy; <a href="https://instagram.com/omaidi.mp" target="_blank">omaidi.mp</a>
     </footer>
 
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Login Admin</h2>
+            <input type="password" id="adminPassword" placeholder="Masukkan Password Admin">
+            <button id="btnLogin">Masuk</button>
+        </div>
+    </div>
+
+    <!-- Edit/Add Modal -->
+    <div id="editorModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close-modal close-editor">&times;</span>
+            <h2 id="editorTitle">Tambah/Edit Sholawat</h2>
+            <input type="hidden" id="editId">
+            <input type="text" id="editTitle" placeholder="Judul Sholawat">
+            <textarea id="editLyrics" rows="10" placeholder="Lirik..."></textarea>
+            <button id="btnSaveSong">Simpan</button>
+        </div>
+    </div>
+
+    <!-- Config Modal -->
+    <div id="configModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close-modal close-config">&times;</span>
+            <h2>Pengaturan Aplikasi</h2>
+            <label>Link WhatsApp Request (Format text encoded):</label>
+            <textarea id="confWaRequest" rows="3"></textarea>
+
+            <label>Link Share WhatsApp:</label>
+            <textarea id="confWaShare" rows="3"></textarea>
+
+            <label>Link Instagram:</label>
+            <input type="text" id="confIg">
+
+            <button id="btnSaveConfig" style="margin-top:10px;">Simpan Konfigurasi</button>
+            <button id="btnLogout" style="margin-top:10px; background:#d9534f;">Logout</button>
+        </div>
+    </div>
+
     <!-- Scripts -->
-    <script src="js/script.js"></script>
+    <script src="js/script.js" type="module"></script>
 </body>
 
 </html>

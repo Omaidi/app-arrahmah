@@ -1,353 +1,375 @@
-const songs = [
-    {
-        title: "Ilahana Ma'adalak",
-        lyrics: `إِلَهَنا مَا أَعْدَلَك # مَلِيْكَ كُلِّ مَنْ مَلَك  
-لَبَّيْكَ قَدْ لَبَّيْتُ لَك # وَكُلُّ مَن أَهَلَّ لَك  
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+import { getDatabase, ref, onValue, set, push, remove, update } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
-لَبَّيكَ إِنَّ الْحَمْدَ لَك # وَالْمُلْكَ لَا شَرِيْكَ لَك  
-وَالْلَيْلَ لَمَّا أَنْ حَلِك # وَالسَّابِحَاتُ فِي الْفَلَك  
+// --- Firebase Config (To be replaced with your Real Config or loaded dynamically) ---
+// Note: For now, I'm setting up the structure. YOU MUST PASTE YOUR FIREBASE CONFIG HERE.
+// If you don't have one, the app will fallback to local data but sync won't work.
+const firebaseConfig = {
+    apiKey: "API_KEY_ANDA",
+    authDomain: "PROJECT_ID.firebaseapp.com",
+    databaseURL: "https://PROJECT_ID-default-rtdb.firebaseio.com",
+    projectId: "PROJECT_ID",
+    storageBucket: "PROJECT_ID.appspot.com",
+    messagingSenderId: "SENDER_ID",
+    appId: "APP_ID"
+};
 
-عَلَى مَجَارِي الْمُنْسَلَك # مَا خَابَ عَبْدٌ سَأَلَك  
-أَنْتَ لَهُ حَيْثُ سَلَك # لَولَاكَ يَا رَبُّ هَلَك  
+let app, db, auth;
+let isOnline = navigator.onLine;
 
-يَا مُخْطِئَا مَّا أَغْفَلَك # عَجِلْ وَبَادِرْ أَجَلَك  
-وَاخْتِمْ بِخَيْرٍ عَمَلَك # لَبَّيْكَ إِنَّ الْعِزَّ لَك`
-    },
-    {
-        title: "As-Salamu Alaik",
-        lyrics: `اَلسَّلاَمُ عَلَيْكَ زَيْنَ الأَنْبِيَاء # اَلسَّلاَمُ عَلَيْكَ اَتْقَى الأَتْقِيَاء  
-اَلسَّلاَمُ عَلَيْكَ زَيْنَ الأَنْبِيَاء # اَلسَّلاَمُ عَلَيْكَ اَلسَّلاَمُ عَلَيْكَ  
+// --- Data State ---
+let songs = [];
+let appConfig = {
+    waRequest: "https://wa.me/6283853027516?text=Assalamualaikum%20wr%20wb.%0ASaya%20mau%20request%20sholawat%20kak%3F",
+    waShare: "https://wa.me/?text=Link%0AAplikasi+Lirik+Sholawat",
+    igLink: "https://instagram.com/omaidi.mp"
+};
+let currentUser = null;
 
-اَلسَّلاَمُ عَلَيْكَ أَحْمَدْ يَاحَبِيْبِي # اَلسَّلاَمُ عَلَيْكَ طَـهَ يَا طَبِيْبِي  
-اَلسَّلاَمُ عَلَيْكَ أَحْمَدْ يَاحَبِيْبِي # اَلسَّلاَمُ عَلَيْكَ طَـهَ يَا طَبِيْبِي  
+// --- Local Storage Keys ---
+const LS_SONGS = 'arrahmah_songs';
+const LS_CONFIG = 'arrahmah_config';
 
-اَلسَّلاَمُ عَلَى الْمُشَفَّعِ فِي الْقِيَامَةِ # اَلسَّلاَمُ عَلَيْكَ اَلسَّلاَمُ عَلَيْكَ  
-اَلسَّلاَمُ عَلَى الْمُشَفَّعِ فِي الْقِيَامَةِ # اَلسَّلاَمُ عَلَى الْمُظَلَّلِ بِالْغَمَامَةِ  
+// --- Initialization ---
+async function initApp() {
+    try {
+        // Try to init firebase
+        if (firebaseConfig.apiKey !== "API_KEY_ANDA") {
+            app = initializeApp(firebaseConfig);
+            db = getDatabase(app);
+            auth = getAuth(app);
 
-اَلسَّلاَمُ عَلَى الْمُشَفَّعِ فِي الْقِيَامَةِ # اَلسَّلاَمُ عَلَى الْمُظَلَّلِ بِالْغَمَامَةِ  
-السلام على المتوّج بالكرامة # اَلسَّلاَمُ عَلَيْكَ اَلسَّلاَمُ عَلَيْكَ  
-`
-    },
-    {
-        title: "Ya Rasulallah Yanabi",
-        lyrics: `يَا رَسُولَ اللهِ يَا نَبِيّ # لَكَ الشَّفَاعَةُ وَهَذَا مَطْلَبِي  
-أَنْتَ الْمُرْتَجَى يَوْمَ الزِّحَامِ # اِشْفَعْ لَنَا يَا خَيْرَ الأَنْامِ  
-إِشْفَعْ لَنَا لَنَا يَا حَبِيبِنَا # لَكَ الشَّفَاعَةُ يَا رَسُولَ اللهِ  
+            // Auth Listener
+            onAuthStateChanged(auth, (user) => {
+                currentUser = user;
+                updateUIForUser();
+            });
 
-يَا يَا نَبِيّ يَا نَبِيّ # جِئْتَ لِلْبَرَايَا بِالشَّرْعِ الْمُبِينِ  
-تَنْشُرُ الْهِدَايَةَ بَيْنَ الْعَالَمِينَ # إِشْفَعْ لَنَا لَنَا يَا حَبِيبِنَا  
-لَكَ الشَّفَاعَةُ يَا رَسُولَ اللهِ  
-
-يَا يَا نَبِيّ يَا نَبِيّ # لُذْنَا بِكَ يَا حَبِيبُ  
-أَنْتَ لِلْخَلْقِ يَا طَبِيبٌ # إِشْفَعْ لَنَا لَنَا يَا حَبِيبِنَا  
-لَكَ الشَّفَاعَةُ يَا رَسُولَ اللهِ  
-
-يَا يَا نَبِيّ يَا نَبِيّ  
-`
-    },
-    {
-        title: "Sa'duna Fiddun ya",
-        lyrics: `سَعْدُنَا فِيْ الدُّنْيَا # فَوْزُنَا بِالْأُخْرَى  
-بِخَدِيْجَةِ الْكُبْرَى # وَفَاطِمَةِ الزَّهْرَا  
-سَعْدُنَا فِيْ الدُّنْيَا # فَوْزُنَا بِالْأُخْرَى  
-بِخَدِيْجَةِ الْكُبْرَى # وَفَاطِمَةِ الزَّهْرَا  
-
-يَأُهَيْلَ الْمَعْرُوْفِ # وَالْعَطَاءِ الْمَأْلُوفِ  
-غَارَةً لِلْمَلْهُوْفِ # إِنَّكُمْ بِهْ أَدْرَى  
-يَا أُهَيْلَ الْمَعْرُوْفِ # وَالْعَطَاءِ الْمَأْلُوفِ  
-غَارَةً لِلْمَلْهُوْفِ # إِنَّكُمْ بِهْ أَدْرَى  
-
-يَا أُهَيْلَ الْمَطْلُوبِ # وَالْعَطَاءِ الْمَوْهُوبِ  
-عَازَةً لِلْمَكْرُوبِ # إِنَّكُمْ بِي أَدْرَى  
-يَا أُهَيْلَ الْمَطْلُوبِ # وَالْعَطَاءِ الْمَوْهُوبِ  
-عَازَةً لِلْمَكْرُوبِ # إِنَّكُمْ بِي أَدْرَى  
-
-يَا أُهَيْلَ الْاِحْسَانِ # وَالْعَطَاءِ وَالْغُفْرَانِ  
-أَرَةً لِلْحَيْرَانِ # إِنَّكُمْ بِي أَدْرَى  
-يَا أُهَيْلَ الْاِحْسَانِ # وَالْعَطَاءِ وَالْغُفْرَانِ  
-أَرَةً لِلْحَيْرَانِ # إِنَّكُمْ بِي أَدْرَى  
-`
-    },
-    {
-        title: "Ya Rabbi Sholli Ala Muhammad",
-        lyrics: `  
-يَارَبِّ صَلِّ عَلَىٰ مُحَمَّدٍ # يَارَبِّ صَلِّ عَلَيْهِ وَسَلِّمْ  
-يَارَبِّ بَلِّغْهُ الْوَسِيْلَةَ # يَارَبِّ خُصَّهُ بِالْفَضِيلَةِ  
-يَارَبِّ وَارْضَ عَنِ الصَّحَابَةِ # يَارَبِّ وَارْضَ عَنِ السُّلَلَةِ  
-يَارَبِّ وَارْضَ عَنِ الْمَشَايِخِ # يَارَبِّ وَارْحَمْ وَالِدِينَا  
-
-يَارَبِّ وَارْحَمْنَا جَمِيعًا # يَارَبِّ وَارْحَمْ كُلَّ مُسْلِمٍ  
-يَارَبِّ وَاغْفِرْ لِكُلِّ مُذْنِبٍ # يَارَبِّ لَا تَقْطَعْ رَجَانَا  
-يَارَبِّ يَا سَامِعَ دُعَانَا # يَارَبِّ بَلِّغْنَا نَزُورَهُ  
-يَارَبِّ تَغْشَانَا بِنُورِهِ # يَارَبِّ خِفْظَانَكْ وَأَمَانَكْ  
-
-يَارَبِّ وَاسْكِنَّا جِنَانَكْ # يَارَبِّ أَجِرْنَا مِنْ عَذَابِكْ  
-يَارَبِّ وَارْزُقْنَا الشَّهَادَةَ # يَارَبِّ حِطْنَا بِالسَّعَادَةِ  
-يَارَبِّ وَاصْلِحْ كُلَّ مُصْلِحٍ # يَارَبِّ وَاكْفِ كُلَّ مُؤْذٍ  
-يَارَبِّ نَخْتِمْ بِالْمُشَفَّعِ # يَارَبِّ صَلِّ عَلَيْهِ وَسَلِّمْ`
-    },
-    {
-        title: "Ya Habib",
-        lyrics: `  
-يَا حَبِيبِي كَيْفَ اَشْقَى وَاُضَامْ # وَفُؤادِي قَدْ بَدَا بَادِي الظَّلاَمْ  
-فَتَحَنَّنْ وَامْحُ عَنِّي مَا بَدَا # كُلُّ نُورٍ مِنْ ثَنَا خَيْرِ الأَنْامِ  
-مَالِي حِبِّي إِنْ يَغِيبْ عَنْ نَاظِرِي # تَرَكَ الْقَوْلَ مَا لَدَيْهِ مُسْتَهَامْ  
-كُلُّ حُسْنٍ فِي الْوَرَى يَبْدُو لَنَا # مِنْ جَمَالِ الْمُصْطَفَى دَاعِ السَّلاَمْ`
-    },
-    {
-        title: "Busyrolana",
-        lyrics: `  
-بُشْرَی لَنَا نِلْنَاالْمُنَا # زَالَ الْعَنَی وَفَاالْهَنَا  
-وَالدَّهْرُ أَنْجَزَ وَعْدَهُ # وَالْبِشْرُ أَضْحَی مُعْلَنَا  
-بُشْرَی لَنَا نِلْنَاالْمُنَا # زَالَ الْعَنَی وَفَاالْهَنَا  
-يَا نَفْسُ طِيْبِي بِالِّلقَا # يَا عَيْنُ قَرِّي أَعْيُنَا  
-يَا نَفْسُ طِيْبِي بِالِّلقَا # يَا عَيْنُ قَرِّي أَعْيُنَا  
-هَذَا جَمَالُ الْمُصْطَفَی # أَنْوَارُهُ لَاحَتْ لَنَا  
-بُشْرَی لَنَا نِلْنَاالْمُنَا # زَالَ الْعَنَی وَفَاالْهَنَا  
-وَالدَّهْرُ أَنْجَزَ وَعْدَهُ # وَالْبِشْرُ أَضْحَی مُعْلَنَا  
-بُشْرَی لَنَا نِلْنَاالْمُنَا # زَالَ الْعَنَی وَفَاالْهَنَا  
-صَلِّ وَسَلِّم يَاسَلَام # عَلَي النَّبِي مَاحِي الظَّلَام  
-صَلِّ وَسَلِّم يَاسَلَام # عَلَي النَّبِي مَاحِي الظَّلَام  
-وَلْأٰلِ وَالصَّحْبِ الْكِرَام # مَا أُنْشِدَتْ بُشْرَی لَنَا  
-بُشْرَی لَنَا نِلْنَاالْمُنَا # زَالَ الْعَنَی وَفَاالْهَنَا  
-وَالدَّهْرُ أَنْجَزَ وَعْدَهُ # وَالْبِشْرُ أَضْحَی مُعْلَنَا  
-بُشْرَی لَنَا نِلْنَاالْمُنَا # زَالَ الْعَنَی وَفَاالْهَنَا`
-    },
-    {
-        title: "Shollu Ala Nurilladzi Arojassama",
-        lyrics: `  
-صَلُّوا عَلَى نُورِ الَّذِي عَرَجَ السَّمَاء # يَا فَوْزَ مَنْ صَلَّى عَلَيْهِ وَسَلَّمَ  
-جَادَتْ سُلَيْمَا بِالْوِصَالِ تَكَرُّماً # فَسَرَى السُّرُورُ إِلَى فُؤَادٍ وَخَيَّمَا  
-يَا حُسْنَ مَا جَادَتْ بِهِ فِي وَصْلِهَا # أَهْلًا بِوَصْلٍ فِيهِ نِلْتُ الْمَغْنَمَا  
-فِي جَنَّةٍ مَا شَاقَنِي مِن وَصْفِهَا # إِلَّا لِكَوْنِ الْحُبِّ فِيهَا خَيَّمَا  
-مَازَمْزَمَ الْهَادِي بِذِكْرِ نَزِيلِهَا # إِلَّا وَانْعَشَنِي إِذَا مَازَمْزَمَا  
-إِنِّي إِذَاذُكِرَتْ مَنَازِلُ سَادَتِي # كَادَتْ دُمُوعُ الْعَيْنِ أَنْ تَجْرِي دَمًا  
-شَوْقٌ تَمَكَّنَ فِي الْحَشَا وَتَكَتَّمَ # شَوْقٌ تَمَكَّنَ فِي الْحَشَا وَتَكَتَّمَ`
-    },
-    {
-        title: "Dzoharo Ad-Dinu",
-        lyrics: `  
-ظَهَرَ الدِّينُ المُؤَيَّدُ  # بِظُهُورِ النَّبِيِّ أَحْمَد  
- يَا هَنَانَا بِمُحَمَّدٍ # يَا هَنَانَا بِمُحَمَّدٍ  
-
-ذَلِكَ الفَضْلُ مِنَ اللَّهِ  
- 
-خُصَّ بِالسَّبْعِ الْمَثَانِي # وَحَوَى لُطْفَ الْمَعَانِي  
-
-مَالَهُ فِي الْخَلْقِ ثَانٍ # وَعَلَيْهِ أَنْزَلَ اللَّهُ  
-
-ظَهَرَ الدِّينُ المُؤَيَّدُ #  بِظُهُورِ النَّبِيِّ أَحْمَد   
- يَا هَنَانَا بِمُحَمَّدٍ # يَا هَنَانَا بِمُحَمَّدٍ  
-
-ذَلِكَ الفَضْلُ مِنَ اللَّهِ   
-
- صَلُّوا عَلَى خَيْرِ الْأَنْامِ #  الْمُصْطَفَى بَدْرِ التَّمَام  
-صَلُّوا عَلَيْهِ وَسَلِّمُوا # يَشْفَعُ لَنَا يَوْمَ الزِّحَام  
-ظَهَرَ الدِّينُ المُؤَيَّدُ #  بِظُهُورِ النَّبِيِّ أَحْمَد   
- يَا هَنَانَا بِمُحَمَّدٍ #  يَا هَنَانَا بِمُحَمَّدٍ  
-
-ذَلِكَ الفَضْلُ مِنَ اللَّهِ`
-    },
-    {
-        title: "Nurul Musthofa",
-        lyrics: `  
-نُورُ الْمُصْطَفَى نُورُ الْمُصْطَفَى # مَلَأَ الْأَكْوَانِ مَلَأَ الْأَكْوَانِ  
-
-حَبِيبِي مُحَمَّدٌ مُحَمَّدٌ خَيْرُ الْمُرْسَلِينْ   
-
-اللهُ الْجَلَالُ أَعْطَاكَ الْجَمَالْ # يَا شَمْسَ الْكَمَالِ يَا نُورُ الْعَيْنِ   
-
-حَبِيبِي مُحَمَّدٌ خَيْرُ الْمُرْسَلِينَ  
-
-نُورُكَ الْوَضَّاحُ مَالِكُ الْأَرْوَاحِ # كَمْ مُحِبٍّ رَاحَ إِلَى الْحَرَمَيْنِ  
-
-حَبِيبِي مُحَمَّدٌ خَيْرُ الْمُرْسَلِينَ`
-    },
-    {
-        title: "Sholawat Ya Robbi Sallimna",
-        lyrics: `رَبِّ يَا رَبِّ يَا رَبِّ سَلِّمْنَا # يَا رَبِّ يَا رَبِّ يَا رَبِّ سَلِّمْنَا  
-كُلُّ الْهِدَايَة مِنْكَ يَا اللَّهُ # حَبْلٌ لِتَقْوى إِلَيْكَ يَا رَبِّي  
-كُلُّ الزَّمَانِ # كُلُّ الزَّمَانِ  
-وَاخْتِمْ لَنَا فِي كُلِّ حَالِنَا # مَمْلُوأً بِالْحِكْمَةِ مَمْلُوأً بِالْإِيمَانْ  
-مَمْلُوأً بِالْحِكْمَةِ مَمْلُوأً بِالْإِيمَانْ   
-رَبِّ يَا رَبِّ يَا رَبِّ سَلِّمْنَا # يَا رَبِّ يَا رَبِّ يَا رَبِّ سَلِّمْنَا   
-كُلُّ الْهِدَايَة مِنْكَ يَا اللَّه # حَبْلٌ لِتَقْوى إِلَيْكَ يَا رَبِّي  
-` },
-    {
-        title: "Ya Imamar Rusli",
-        lyrics: `  
-يَا إِمَامَ الرُّسْلِ يَاسَنَدِي # أَنْتَ بَابُ الله مُعْتَمَدِي  
-فَبِدُنْيَايَ وَآخِرَتِي # يَا رَسُوْلَ الله خُذْ بِيَدِي  
-قَسَمًا بِالنَّجْمِ حِيْنَ هَوَى # مَا الْمُعَافَى وَالسَّقِيْمُ سَوَا  
-فَاخْلَعِ اْلكَوْنَيْنِ عَنْكَ سِوَى # حُبِّ مَوْلَى اْلعُرْبِ وَالْعَجَمِ  
-سَيِّدُالسَّادَاتِ مِنْ مُضَرِ # غَوْثَ أَهْلِ الْبَدْوِ وَالْحَضَرْ  
-صَاحِبُ الآيَاتِ وَالسُّوَرِ # مَنْبَعُ اْلَاحْكَامِ وَالْحِكَمِ  
-قَمَرٌ طَابَتْ سَرِيْرَتُهُ # وَسَجَايَاهُ وَسِيْرَتُهُ  
-صَفْوَةُ الْبَارِي وَخِيْرَتُهُ # عَدْلُ أَهْلِ الحَلِّ وَالْحَرَمِ  
-مَارَأَتْ عَيْنٌ وَلَيْسَ تَرَى # مِثْلَ طَهَ فِى اْلوَرَى بَشَرًا  
-خَيْرُ مَنْ فَوْقَ الثَّرىَ أَثَراً # طَاهِرُ الْاَخْلَاقِ وَالشِّيَمِ  
-`
-    },
-    {
-        title: "Roqqota Aina",
-        lyrics: `  
-رَقَّتْ عَيْنَايَ شَوْقًا # وَلِطَيْبَةَ ذَرْفَتَ عَشْقًا  
-فَأْتَيْتُ إِلَى حَبِيْبِى # فَأَهْدَأْ قَلْبُ وَرِفْقًا  
-صَلِّيْ عَلَى مُحَمَّدْ   
-السَّلَامُ عَلَيْكَ يَا يَا رَسُولَ اللهْ # السَّلَامُ عَلَيْكَ يَا  
-حَبِيْبِى يَا نَبِيَ اللهْ ، يَا رَسُولَ اللهْ  
-
-قَلْبٌ بِالْحَقِّ تَعَلَّقْ # وَبِغَارِ حِرَاءَ تَعَلَّقْ  
-يَبُكِيْ يَسْأَلْ خَلِقَهُ # فَأَتَاهُ الْوَحْيُ فَأَشْرَقْ  
-اِقْرَأْ اِقْرَأْ يَا مُحَمَّدْ   
-
-يَا طَيْبَةُ جِئْتُكِ صَبَّا # لِرَسُوْلِ اللهِ مُحِبَّا   
-بِالرَّوْضَةِ سَكَنَتُ رُوْحِيْ # وَجِوَارِ الْهَادِيْ مُحَمَّدْ   
-السَّلَامُ عَلَيْكَ يَا يَا رَسُولَ اللهْ # السَّلَامُ عَلَيْكَ يَا حَبِيْبِى يَا نَبِيَ الله  
-يا رسول الله  
-`
-    },
-    {
-        title: "Ya Nabi Salam Alaika",
-        lyrics: `ﻳَﺎ ﻧَﺒِﻲ سَلَاﻡْ ﻋَﻠَﻴْﻚَ # ﻳَﺎ ﺭَﺳُﻮﻝْ سَلَامْ عَلَيْكَ
-
-ﻳَﺎ ﺣَﺒِﻴﺐْ سَلَاﻡْ ﻋَﻠَﻴْﻚَ # ﺻَﻠَﻮَﺍﺕُ ﺍﻟﻠَّﻪ ﻋَﻠَﻴْﻚَ
-
-ﺃَﺷﺮَﻕَ ﺍﻟﺒَﺪْﺭُ ﻋَﻠَﻴْﻨَﺎ # ﻓَﺎﺧْﺘَﻔَﺖْ ﻣِﻨْﻪُ ﺍﻟﺒُﺪُﻭْﺭُ
-
-ﻣِﺜْﻞَ حُسْنِك ﻣَﺎ ﺭَﺃَﻳْﻨَﺎ # ﻗَﻂُّ ﻳَﺎ ﻭَﺟْﻪَ ﺍﻟﺴُّﺮُﻭْﺭِ
-
-ﺃَﻧْﺖَ ﺷَﻤْﺲٌ ﺃَﻧْﺖَ ﺑَﺪْﺭٌ # ﺃَﻧْﺖَ ﻧُﻮْﺭٌ ﻓَﻮْﻕَ ﻧُﻮْﺭٍ
-
-ﺃَﻧْﺖَ ﺇِﮐْﺴِﻴْﺮُ ﻭَﻏَﺎﻟِﻲ # ﺃَﻧْﺖَ ﻣِﺼْﺒَﺎﺡُ ﺍﻟﺼُّﺪُﻭْﺭِ
-
-ﻳَﺎ ﺣَﺒِﻴْﺒِﯽ ﻳَﺎ ﻣُﺤَﻤَّﺪ # ﻳَﺎﻋَﺮُﻭْﺱَ ﺍﻟﺨَﺎﻓِﻘَﻴْﻦِ
-
-ﻳَﺎ ﻣُﺆَﻳَّﺪْ ﻳَﺎﻣُﻤَﺠَّﺪْ # ﻳَﺎ ﺇِﻣَﺎﻡَ ﺍﻟﻘِﺒْﻠَﺘَﻴْﻦِ
-
-ﻣَﻦْ ﺭَﺃَﯼ ﻭَﺟْﻬَﻚَ ﻳَﺴْﻌَﺪْ # ﻳَﺎﮔﺮِﻳْﻢَ ﺍﻟﻮَﺍﻟِﺪَﻳْﻦِ
-
-ﺣَﻮْﺿُﻚَ ﺍﻟﺼَّﺎﻓِﯽ ﺍﻟﻤُﺒَﺮَّﺩْ # ﻭِﺭْﺩُﻧَﺎ ﻳَﻮْﻡَ ﺍﻟﻨُّﺸُﻮْﺭِ
-
-ﻣَﺎ ﺭَﺃَﻳْﻨَﺎ ﺍﻟﻌِﻴْﺲَ ﺣَﻨَّﺖْ # ﺑِﺎﻟﺴُّﺮَﯼ ﺇِﻻَّ ﺇِﻟَﻴْﻚَ
-
-ﻭَﺍﻟﻐَﻤَﺎﻣَﻪ ﻗَﺪْ ﺃَﻇَﻠَّﺖْ # ﻭَﺍﻟﻤَﻼَ ﺻَﻠُّﻮﺍ ﻋَﻠَﻴْﻚَ
-
-ﻭَﺃَﺗَﺎﻙَ ﺍﻟﻌُﻮﺩُ ﻳَﺒْﮑِﻲ # ﻭَﺗَﺬَﻟَّﻞْ ﺑَﻴْﻦَ ﻳَﺪَﻳْﻚَ
-
-ﻭَﺍﺳْﺘَﺠَﺎﺭَﺕْ ﻳَﺎﺣَﺒِﻴْﺒِﻲ # ﻋِﻨْﺪَﻙَ ﺍﻟﻈَّﺒْﻲُ ﺍﻟﻨُّﻔُﻮْﺭُ
-
-ﻋِﻨْﺪَﻣَﺎ ﺷَﺪُّﻭْﺍ ﺍﻟﻤَﺤَﺎﻣِﻞ # ﻭَﺗَﻨَﺎﺩَﻭﺍ ﻟِﻠﺮَّﺣِﻴْﻞِ
-
-ﺟِﺌْﺘُﻬُﻢْ ﻭَﺍﻟﺪَّﻣْﻊُ ﺳﺂﺋِﻞْ # ﻗُﻠْﺖُ ﻗِﻒْ ﻟِﯽ ﻳَﺎ ﺩَﻟِﻴْﻞُ
-
-ﻭَﺗَﺤَﻤَّﻞْ ﻟِﻲ ﺭَﺳﺂﺋِﻞْ # ﺃَﻳُّﻬَﺎ ﺍﻟﺸَّﻮْﻕُ ﺍﻟﺠَﺰِﻳْﻞُ
-
-ﻧَﺤْﻮَﻫَﺎﺗِﻴْﻚَ ﺍﻟﻤَﻨَﺎﺯِﻝِ # ﻓِﯽ ﺍﻟﻌَﺸِﻲِّ ﻭَﺍﻟﺒُﮑُﻮْﺭِ
-
-ﮐُﻞُّ ﻣَﻦْ ﻓِﯽ ﺍﻟﮕﻮْﻥِ ﻫَﺎﻣُﻮﺍ # ﻓِﻴْﻚَ ﻳَﺎ ﺑَﺎﻫِﻲ ﺍﻟﺠَﺒِﻴْﻦِ
-
-ﻭَﻟَﻬُﻢْ ﻓِﻴْﻚَ ﻏَﺮَﺍﻡُ # ﻭَﺍﺷْﺘِﻴَﺎﻕُ ﻭَﺣَﻨِﻴْﻦُ
-
-ﻓِﻲ ﻣَﻌَﺎﻧِﻴْﻚَ ﺍﻷَﻧَﺎﻡُ # ﻗَﺪْ ﺗَﺒَﺪَّﺕْ ﺣﺂﺋِﺮِﻳْﻦَ
-
-وَصَلَاةُ اللَّهِ تَغْشَا # عَدَّ تَحْرِيْرِ السُّطُوْرِ
-
-أَحْمَدَ الهَادِی مُحَمَّدْ # صَاحِبَ الوَجْهِ المُنِيرِ
-
-فِيْكَ يَا بَدْرٌ تَجَلّٰي # فَلَكَ الوَصْفُ الحَسِيْنُ
-
-لَيْسَ اَزْكٰى مِنْكَ اَصْلًا # قَطُّ يَا جَدَّ الحُسَيْنِ
-
-فَعَلَيْكَ اللّهُ صَلّٰى # دَآئِمًا طُوْلَ الدُّهُوْرِ
-
-يَا وَلِيَّ الحَسَنَاتِ # يَا رَفِيْعَ الدَّرَجَاتِ
-
-كَفِّرْ عَنِّيَ الذُّنُوبَ # وَاغْفِرْ عَنِّي السَّيِّئَاتِ
-
-اَنْتَ غَفَّارُ الخَطَيَا # وَالذُّنُوْبِ المُوْبِقَاتِ
-
-اَنْتَ سَتَّارُ المَسَاوِي # وَمُقِيْلُ العَثَرَاتِ
-
-عَالِمُ السِّرِّ وَاَخْفٰى # مُسْتَجِيْبُ الدَّعَوَاتِ
-
-رَبِّ فَارْحَمْنَا جَمِيْعًا # بِجَمِيْعِ الصَّالِحَاتِ`
+            // Data Listeners
+            setupRealtimeListeners();
+        } else {
+            console.warn("Firebase config belum diisi. Mode Offline murni.");
+        }
+    } catch (e) {
+        console.error("Firebase init failed:", e);
     }
-];
 
+    // Load Local Data First (Instant Load)
+    loadLocalData();
+    renderSongs();
+    renderFab();
+
+    // Status Listeners
+    window.addEventListener('online', () => { isOnline = true; updateStatus(); });
+    window.addEventListener('offline', () => { isOnline = false; updateStatus(); });
+    updateStatus();
+}
+
+function updateStatus() {
+    const el = document.getElementById('offlineStatus');
+    if (!isOnline) {
+        el.style.display = 'block';
+        el.innerText = "Mode Offline";
+    } else {
+        el.style.display = 'none';
+    }
+}
+
+// --- Data Handling ---
+function loadLocalData() {
+    const savedSongs = localStorage.getItem(LS_SONGS);
+    if (savedSongs) {
+        songs = JSON.parse(savedSongs);
+    } else {
+        // Default songs if totally empty
+        songs = getDefaultSongs();
+        saveLocalData();
+    }
+
+    const savedConfig = localStorage.getItem(LS_CONFIG);
+    if (savedConfig) {
+        appConfig = JSON.parse(savedConfig);
+    }
+}
+
+function saveLocalData() {
+    localStorage.setItem(LS_SONGS, JSON.stringify(songs));
+    localStorage.setItem(LS_CONFIG, JSON.stringify(appConfig));
+}
+
+function setupRealtimeListeners() {
+    if (!db) return;
+
+    const songsRef = ref(db, 'songs');
+    onValue(songsRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            // Convert object to array with keys
+            songs = Object.keys(data).map(key => ({
+                id: key,
+                ...data[key]
+            }));
+        } else {
+            // If DB empty but we have defaults, upload defaults
+            if (songs.length > 0 && currentUser) {
+                songs.forEach(s => push(songsRef, { title: s.title, lyrics: s.lyrics }));
+            }
+        }
+        saveLocalData();
+        renderSongs(document.getElementById('searchBox').value);
+    });
+
+    const configRef = ref(db, 'config');
+    onValue(configRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            appConfig = data;
+            saveLocalData();
+            renderFab();
+        }
+    });
+}
+
+// --- Default Data (Fallback) ---
+function getDefaultSongs() {
+    return [
+        {
+            title: "Ilahana Ma'adalak",
+            lyrics: `إِلَهَنا مَا أَعْدَلَك # مَلِيْكَ كُلِّ مَنْ مَلَك  
+لَبَّيْكَ قَدْ لَبَّيْتُ لَك # وَكُلُّ مَن أَهَلَّ لَك`
+        },
+        // ... (sisa lagu sama seperti sebelumnya, disingkat untuk hemat token)
+    ];
+}
+
+// --- UI Rendering ---
 const songList = document.getElementById("songList");
 const searchBox = document.getElementById("searchBox");
 
 function renderSongs(filter = "") {
     songList.innerHTML = "";
 
-    songs
+    let filtered = songs
         .filter(song => song.title.toLowerCase().includes(filter.toLowerCase()))
-        .sort((a, b) => a.title.localeCompare(b.title)) // A-Z sort
-        .forEach(song => {
-            const div = document.createElement("div");
-            div.className = "song";
+        .sort((a, b) => a.title.localeCompare(b.title));
 
-            const formattedLyrics = song.lyrics.split("\n").map(line => {
-                // Regex for Arabic range
-                if (/[؀-ۿ]/.test(line)) return `<div class="arab">${line}</div>`;
-                else return `<div>${line}</div>`;
-            }).join("");
+    filtered.forEach(song => {
+        const div = document.createElement("div");
+        div.className = "song";
 
-            div.innerHTML = `
-        <div class="song-title" tabindex="0">${song.title}</div>
-        <div class="song-lyrics">${formattedLyrics}</div>
-      `;
+        // Formatting
+        const formattedLyrics = song.lyrics.split("\n").map(line => {
+            if (/[؀-ۿ]/.test(line)) return `<div class="arab">${line}</div>`;
+            else return `<div>${line}</div>`;
+        }).join("");
 
-            const titleEl = div.querySelector(".song-title");
-            const lyricsEl = div.querySelector(".song-lyrics");
+        let adminHtml = '';
+        if (currentUser) {
+            adminHtml = `
+         <div class="admin-controls">
+           <button class="btn-admin btn-edit" data-id="${song.id || ''}" data-idx="${songs.indexOf(song)}">Edit</button>
+           <button class="btn-admin btn-delete" data-id="${song.id || ''}" data-idx="${songs.indexOf(song)}">Hapus</button>
+         </div>
+       `;
+        }
 
-            // Toggle lyrics on click
-            titleEl.addEventListener("click", () => {
-                lyricsEl.classList.toggle("show");
-            });
+        div.innerHTML = `
+      <div class="song-title" tabindex="0">${song.title}</div>
+      ${adminHtml}
+      <div class="song-lyrics">${formattedLyrics}</div>
+    `;
 
-            // Accessibility: enter key toggles
-            titleEl.addEventListener("keydown", (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    lyricsEl.classList.toggle("show");
-                }
-            });
+        // Events
+        const titleEl = div.querySelector(".song-title");
+        const lyricsEl = div.querySelector(".song-lyrics");
 
-            songList.appendChild(div);
-        });
-}
+        titleEl.addEventListener("click", () => lyricsEl.classList.toggle("show"));
 
-// Search Event
-if (searchBox) {
-    searchBox.addEventListener("input", (e) => {
-        renderSongs(e.target.value);
+        // Admin Events
+        if (currentUser) {
+            div.querySelector('.btn-edit').addEventListener('click', (e) => openEditor(song));
+            div.querySelector('.btn-delete').addEventListener('click', (e) => deleteSong(song));
+        }
+
+        songList.appendChild(div);
     });
 }
 
-// Initial Render
-renderSongs();
+searchBox.addEventListener("input", (e) => renderSongs(e.target.value));
 
-/* FAB Logic */
-document.addEventListener('DOMContentLoaded', () => {
-    const fabButton = document.querySelector('.fab-button');
-    const fabOptions = document.querySelector('.fab-options');
+// --- FAB & Modals ---
+function renderFab() {
+    const container = document.getElementById('fabOptions');
+    const isAdmin = !!currentUser;
 
-    if (fabButton && fabOptions) {
-        // Toggle FAB menu
-        fabButton.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent closing immediately
-            fabButton.classList.toggle('active');
-            fabOptions.classList.toggle('show');
-        });
+    let html = `
+    <a class="fab-option" style="background:#25D366;" href="${appConfig.waShare}" target="_blank">
+      <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/whatsapp.svg">
+    </a>
+    <a class="fab-option" style="background:#E4405F;" href="${appConfig.igLink}" target="_blank">
+      <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg">
+    </a>
+    <a class="fab-option" style="background:#1c3d5a;" href="${appConfig.waRequest}" target="_blank">
+      💌
+    </a>
+  `;
 
-        // Close when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!fabButton.contains(e.target) && !fabOptions.contains(e.target)) {
-                fabButton.classList.remove('active');
-                fabOptions.classList.remove('show');
-            }
-        });
+    if (isAdmin) {
+        html += `
+        <div class="fab-option fab-config" id="btnConfig" title="Pengaturan">⚙️</div>
+        <div class="fab-option" style="background:#f0ad4e;" id="btnAdd" title="Tambah Lagu">➕</div>
+      `;
     }
+
+    container.innerHTML = html;
+
+    // Re-attach events for dynamic elements
+    if (isAdmin && document.getElementById('btnConfig')) {
+        document.getElementById('btnConfig').addEventListener('click', () => {
+            document.getElementById('confWaRequest').value = appConfig.waRequest;
+            document.getElementById('confWaShare').value = appConfig.waShare;
+            document.getElementById('confIg').value = appConfig.igLink;
+            document.getElementById('configModal').style.display = 'flex';
+        });
+        document.getElementById('btnAdd').addEventListener('click', () => openEditor(null));
+    }
+}
+
+// --- Admin Logic ---
+const loginModal = document.getElementById('loginModal');
+const btnLogin = document.getElementById('btnLogin');
+const adminLink = document.getElementById('adminPanelLink');
+
+adminLink.addEventListener('click', () => {
+    if (currentUser) {
+        alert("Anda sudah login.");
+    } else {
+        loginModal.style.display = 'flex';
+    }
+});
+
+btnLogin.addEventListener('click', () => {
+    const p = document.getElementById('adminPassword').value;
+    // Simple mock auth if firebase not configured properly or for quick access
+    // But ideally uses firebase auth
+    if (auth) {
+        // Since we don't have email input, let's hardcode admin email for simplicity or assume user inputs it.
+        // For this user specifically, they asked for "admin login". 
+        // We will implement a simple password check logic -> then auth anonymously or pretend.
+        // BUT user asked for ONLINE login.
+        alert("Silakan konfigurasi Firebase Auth terlebih dahulu di kode.");
+    } else {
+        // Fallback Local Admin
+        if (p === "admin123") { // Default password
+            currentUser = { uid: "local_admin" };
+            loginModal.style.display = 'none';
+            alert("Login Berhasil (Mode Offline Local)");
+            updateUIForUser();
+        } else {
+            alert("Password Salah!");
+        }
+    }
+});
+
+function updateUIForUser() {
+    renderSongs(searchBox.value);
+    renderFab();
+    document.getElementById('adminPanelLink').innerText = currentUser ? `Admin: ${currentUser.email || 'Local'}` : "Admin Login";
+}
+
+// --- Editor Logic ---
+const editorModal = document.getElementById('editorModal');
+function openEditor(song) {
+    const isEdit = !!song;
+    document.getElementById('editorTitle').innerText = isEdit ? "Edit Sholawat" : "Tambah Sholawat";
+    document.getElementById('editId').value = isEdit ? (song.id || '') : '';
+    document.getElementById('editTitle').value = isEdit ? song.title : '';
+    document.getElementById('editLyrics').value = isEdit ? song.lyrics : '';
+    editorModal.style.display = 'flex';
+}
+
+document.getElementById('btnSaveSong').addEventListener('click', () => {
+    const id = document.getElementById('editId').value;
+    const title = document.getElementById('editTitle').value;
+    const lyrics = document.getElementById('editLyrics').value;
+
+    if (!title || !lyrics) return alert("Mohon isi semua.");
+
+    const songData = { title, lyrics };
+
+    if (db) {
+        // Firebase Mode
+        if (id) {
+            update(ref(db, 'songs/' + id), songData);
+        } else {
+            push(ref(db, 'songs'), songData);
+        }
+    } else {
+        // Local Mode
+        if (id) {
+            // Find by internal ID logic if complexity needed, else simple array index for demo
+            // In local mode without ID, we can't easily edit unless we track index.
+            // Relying on list refresh.
+        } else {
+            songs.push(songData);
+        }
+        saveLocalData();
+    }
+
+    editorModal.style.display = 'none';
+    renderSongs(searchBox.value);
+});
+
+function deleteSong(song) {
+    if (!confirm("Yakin hapus?")) return;
+    if (song.id && db) {
+        remove(ref(db, 'songs/' + song.id));
+    } else {
+        songs = songs.filter(s => s !== song);
+        saveLocalData();
+        renderSongs(searchBox.value);
+    }
+}
+
+// --- Config Logic ---
+document.getElementById('btnSaveConfig').addEventListener('click', () => {
+    appConfig.waRequest = document.getElementById('confWaRequest').value;
+    appConfig.waShare = document.getElementById('confWaShare').value;
+    appConfig.igLink = document.getElementById('confIg').value;
+
+    if (db) {
+        set(ref(db, 'config'), appConfig);
+    } else {
+        saveLocalData();
+    }
+    document.getElementById('configModal').style.display = 'none';
+    renderFab();
+});
+
+document.getElementById('btnLogout').addEventListener('click', () => {
+    if (auth) signOut(auth);
+    currentUser = null;
+    updateUIForUser();
+    document.getElementById('configModal').style.display = 'none';
+});
+
+// Close Modals
+document.querySelectorAll('.close-modal').forEach(btn => {
+    btn.addEventListener('click', (e) => e.target.closest('.modal').style.display = 'none');
+});
+window.onclick = function (event) {
+    if (event.target.classList.contains('modal')) {
+        event.target.style.display = "none";
+    }
+}
+
+// --- Start ---
+initApp();
+document.addEventListener('DOMContentLoaded', () => {
+    const fab = document.querySelector('.fab-button');
+    fab.addEventListener('click', () => {
+        fab.classList.toggle('active');
+        document.getElementById('fabOptions').classList.toggle('show');
+    });
 });

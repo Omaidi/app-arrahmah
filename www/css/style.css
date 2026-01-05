@@ -1,5 +1,6 @@
 /* Global Styles */
-body, html {
+body,
+html {
     margin: 0;
     padding: 0;
     font-family: 'Poppins', sans-serif;
@@ -8,6 +9,8 @@ body, html {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    /* Disable blue highlight */
+    -webkit-tap-highlight-color: transparent;
 }
 
 /* Header */
@@ -19,7 +22,7 @@ header {
     position: sticky;
     top: 0;
     z-index: 100;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 header h1 {
@@ -35,12 +38,12 @@ header h1 {
     border: none;
     border-radius: 8px;
     font-size: 16px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 #searchBox:focus {
     outline: none;
-    box-shadow: 0 0 0 2px rgba(255,255,255,0.5);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
 }
 
 /* Container */
@@ -51,6 +54,8 @@ header h1 {
     flex: 1;
     width: 100%;
     box-sizing: border-box;
+    padding-bottom: 100px;
+    /* Space for FAB and footer */
 }
 
 /* Song Item */
@@ -59,13 +64,13 @@ header h1 {
     border: 1px solid #ddd;
     border-radius: 10px;
     margin-bottom: 15px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
     overflow: hidden;
     transition: all 0.3s;
 }
 
 .song:hover {
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 /* Song Title */
@@ -77,21 +82,29 @@ header h1 {
     background: #f7f9fc;
     border-radius: 10px 10px 0 0;
     display: block;
-    transition: background 0.3s, color 0.3s;
+    transition: background 0.2s, color 0.2s;
+    user-select: none;
+    /* Prevent text selection */
 }
 
-.song-title:hover {
-    background: #1c3d5a;
-    color: #fff;
+/* Custom Active/Hover State matching theme instead of blue highlight */
+@media (hover: hover) {
+    .song-title:hover {
+        background: #1c3d5a;
+        color: #fff;
+    }
 }
 
-.song-title:focus,
 .song-title:active {
-    outline: none;
-    background: #1c3d5a;
+    background: #16304a;
+    /* Darker shade of theme color */
     color: #fff;
-    -webkit-tap-highlight-color: transparent;
 }
+
+.song-title:focus {
+    outline: none;
+}
+
 
 /* Lyrics */
 .song-lyrics {
@@ -103,11 +116,12 @@ header h1 {
     background: #fff;
     border-top: 1px solid #eee;
     font-size: 16px;
-    transition: max-height 0.5s ease, padding 0.5s ease;
+    transition: max-height 0.4s ease-out, padding 0.4s ease;
 }
 
 .song-lyrics.show {
-    max-height: 2000px; /* Increased to accommodate longer lyrics */
+    max-height: 3000px;
+    /* Large enough for long lyrics */
     padding: 15px;
 }
 
@@ -116,9 +130,10 @@ header h1 {
     font-family: 'Amiri', serif;
     direction: rtl;
     text-align: right;
-    font-size: 20px; /* Slight bump for readability */
-    line-height: 2.0;
-    margin-bottom: 10px;
+    font-size: 22px;
+    line-height: 2.2;
+    margin-bottom: 15px;
+    color: #000;
 }
 
 /* Footer */
@@ -128,8 +143,8 @@ footer {
     background: #1c3d5a;
     font-size: 14px;
     color: #fff;
-    margin-top: 20px;
-    padding-bottom: 80px; /* Space for FAB */
+    margin-top: auto;
+    padding-bottom: 30px;
 }
 
 footer a {
@@ -138,21 +153,17 @@ footer a {
     font-weight: 600;
 }
 
-footer a:hover {
-    color: #cbd5e0;
-}
-
 /* FAB Styles */
 .fab-container {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
+    bottom: 30px;
+    right: 25px;
     z-index: 9999;
 }
 
 .fab-button {
-    width: 56px;
-    height: 56px;
+    width: 60px;
+    height: 60px;
     background: #1c3d5a;
     border-radius: 50%;
     color: white;
@@ -161,13 +172,14 @@ footer a:hover {
     justify-content: center;
     align-items: center;
     cursor: pointer;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
     user-select: none;
     transition: background 0.3s ease, transform 0.3s ease;
     -webkit-tap-highlight-color: transparent;
 }
 
-.fab-button:hover {
+.fab-button:active {
+    transform: scale(0.95);
     background: #16304a;
 }
 
@@ -177,12 +189,12 @@ footer a:hover {
 
 .fab-options {
     position: absolute;
-    bottom: 70px;
+    bottom: 75px;
     right: 0;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    pointer-events: none; /* Disable clicks when hidden */
+    pointer-events: none;
 }
 
 .fab-options.show {
@@ -190,21 +202,26 @@ footer a:hover {
 }
 
 .fab-option {
-    width: 48px;
-    height: 48px;
-    margin-bottom: 12px;
+    width: 50px;
+    height: 50px;
+    margin-bottom: 15px;
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
     color: white;
     text-decoration: none;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     cursor: pointer;
     opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.3s ease, transform 0.3s ease;
-    font-size: 20px;
+    transform: translateY(20px) scale(0.8);
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    font-size: 22px;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.fab-option:active {
+    transform: scale(0.9);
 }
 
 .fab-option img {
@@ -216,19 +233,67 @@ footer a:hover {
 /* Staggered Animation */
 .fab-options.show .fab-option {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
 }
 
-.fab-options.show .fab-option:nth-child(1) { transition-delay: 0.15s; }
-.fab-options.show .fab-option:nth-child(2) { transition-delay: 0.10s; }
-.fab-options.show .fab-option:nth-child(3) { transition-delay: 0.05s; }
+.fab-options.show .fab-option:nth-child(1) {
+    transition-delay: 0.2s;
+}
+
+/* Bottom-most option */
+.fab-options.show .fab-option:nth-child(2) {
+    transition-delay: 0.1s;
+}
+
+.fab-options.show .fab-option:nth-child(3) {
+    transition-delay: 0s;
+}
+
+/* Top-most option */
+
+/* Config Button in FAB */
+.fab-config {
+    background: #f0ad4e;
+}
 
 /* Responsive */
 @media(max-width: 600px) {
-    header h1 { font-size: 20px; }
-    #searchBox { width: 95%; }
-    .song-title { font-size: 16px; margin-left: 0; margin-right: 0;}
-    .song-lyrics { font-size: 15px; }
-    .arab { font-size: 18px; }
-    footer { font-size: 13px; }
+    header h1 {
+        font-size: 20px;
+    }
+
+    #searchBox {
+        width: 95%;
+    }
+
+    .song-title {
+        font-size: 16px;
+        padding: 15px 20px;
+    }
+
+    .song-lyrics {
+        font-size: 15px;
+    }
+
+    .arab {
+        font-size: 20px;
+    }
+
+    footer {
+        font-size: 13px;
+    }
+
+    .fab-button {
+        width: 56px;
+        height: 56px;
+        bottom: 20px;
+        right: 20px;
+    }
+
+    .fab-options {
+        bottom: 70px;
+        right: -5px;
+    }
+
+    /* Adjust alignment */
 }
